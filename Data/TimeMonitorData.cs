@@ -1,21 +1,40 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TimeMonitor
+namespace TimeMonitor.Data
 {
-      [CreateAssetMenu(fileName = "TimeMonitorData", menuName = "TimeMonitor/TimeMonitorData")]
-      public sealed class TimeMonitorData : ScriptableObject
+      [System.Serializable]
+      public class Session
       {
-            public double TotalTime;
-            public List<TimeData> Sessions = new List<TimeData>();
+            public string startTime;
+            public string endTime;
       }
 
-      [Serializable]
-      public class TimeData
+      [System.Serializable]
+      public class Day
       {
-            public string StartDate;
-            public string EndDate;
-            public double SessionTime;
+            public int dayNumber;
+            public List<Session> sessions = new List<Session>();
+      }
+
+      [System.Serializable]
+      public class Month
+      {
+            public int monthNumber;
+            public List<Day> days = new List<Day>();
+      }
+
+      [System.Serializable]
+      public class Year
+      {
+            public int yearNumber;
+            public List<Month> months = new List<Month>();
+      }
+
+      [CreateAssetMenu(fileName = "TimeMonitorData", menuName = "TimeMonitor/Data", order = 1)]
+      public sealed class TimeMonitorData : ScriptableObject
+      {
+            public int startYear;
+            public List<Year> years = new List<Year>();
       }
 }
