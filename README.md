@@ -2,7 +2,7 @@
 
 TimeMonitor is a Unity asset designed to help developers track the amount of time spent working on a project. It provides detailed logs of work sessions and various visualization tools to understand the time investment in a project.
 
-**_This asset is still very early in development_**
+**_This asset is still very early in development but can be use without problem_**
 
 ## Features
 
@@ -10,7 +10,9 @@ TimeMonitor is a Unity asset designed to help developers track the amount of tim
 - **Monthly and Daily Logs**: Organizes sessions into monthly and daily logs.
 - **Interactive Calendar View**: Visualizes the time spent on each day in a calendar format.
 - **Line Graph and Histogram**: Provides graphical representations of time spent per day.
-- **Session Management**: Combines multiple sessions of a day into one and clears all data easily via settings.
+- **Productivity Reports**: Generates weekly and monthly reports on the time spent on the project.
+- **Trend Analysis**: Visualizes the evolution of time spent on the project over different periods.
+- **Code Editor Activity Detection**: Detects activity in selected code editors (Visual Studio, Rider, VS Code) and continues tracking time even if Unity is paused.
 
 ## How It Works
 
@@ -25,7 +27,7 @@ TimeMonitor is a Unity asset designed to help developers track the amount of tim
     - Go to `Tools > Time Monitor` in the Unity menu to open the Time Monitor window.
 
 2. **Tracking Time**:
-    - The asset automatically tracks your sessions when the window is open. It logs the start and end times of each session. Closing the window or unity end a session that register automatically.
+    - The asset automatically tracks your sessions when the window is open. It logs the start and end times of each session. Closing the window or Unity ends a session that registers automatically.
 
 3. **Viewing Logs**:
     - The main window displays the current session time and total project time.
@@ -36,9 +38,9 @@ TimeMonitor is a Unity asset designed to help developers track the amount of tim
     - Options in the Settings window:
         - **Combine All Sessions**: Combines multiple sessions of the same day into one to clean up data.
         - **Clear All Data**: Deletes all logged data.
-     
-Every session is logged in a friendly format in the sub data folder in a scriptable object. It allows you to easily add missing session or delete some. And pass data to a new unity project.
-At the opening of the window the asset will look for that scriptable object, if none, one will be created.
+        - **Select Code Editor**: Choose your preferred code editor (Visual Studio, Rider, VS Code) to continue tracking time when Unity is paused.
+
+Every session is logged in a friendly format in the sub data folder in a scriptable object. It allows you to easily add missing sessions or delete some, and pass data to a new Unity project. At the opening of the window, the asset will look for that scriptable object; if none is found, one will be created.
 
 ### Visualizations
 
@@ -51,12 +53,31 @@ At the opening of the window the asset will look for that scriptable object, if 
 - **Histogram**:
     - Displays a bar chart of hours worked per day over the selected date range.
 
+### Productivity Reports
+
+- **Weekly Report**:
+    - Generates a report summarizing the total hours worked, average daily hours, and other statistics for the past week.
+    
+- **Monthly Report**:
+    - Generates a report summarizing the total hours worked, average daily hours, and other statistics for the past month.
+
+### Trend Analysis
+
+- **Trend Visualization**:
+    - Displays trends in hours worked per day over a specified date range, allowing you to see changes in productivity over time.
+
 ## Known Issues
 
 - **_This asset is still very early in development_**
-- **_Unsolved issue or actual limitation will be posted here_**
+- **_Unsolved issues or actual limitations will be posted here_**
 
 ## Changelog
+
+### Version 0.3
+
+- Added productivity reports to generate weekly and monthly summaries.
+- Added trend analysis to visualize changes in time spent over different periods.
+- Implemented code editor activity detection for Visual Studio, Rider, and VS Code to continue tracking time when Unity is paused.
 
 ### Version 0.2
 
