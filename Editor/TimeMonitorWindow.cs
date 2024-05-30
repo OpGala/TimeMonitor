@@ -339,8 +339,8 @@ namespace TimeMonitor.Editor
                 Handles.color = Color.blue;
                 for (int i = 0; i < daysInRange - 1; i++)
                 {
-                    Vector3 start = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
-                    Vector3 end = new Vector3(graphRect.x + (i + 1) * xStep, graphRect.y + graphRect.height - dailyHours[i + 1] * yStep);
+                    var start = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    var end = new Vector3(graphRect.x + (i + 1) * xStep, graphRect.y + graphRect.height - dailyHours[i + 1] * yStep);
                     Handles.DrawLine(start, end);
 
                     Handles.DrawSolidDisc(start, Vector3.forward, 2);
@@ -349,7 +349,7 @@ namespace TimeMonitor.Editor
                 Handles.color = Color.red;
                 for (int i = 0; i < daysInRange; i++)
                 {
-                    Vector3 point = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    var point = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
                     Handles.DrawSolidDisc(point, Vector3.forward, 2);
                 }
             }
@@ -389,7 +389,7 @@ namespace TimeMonitor.Editor
                 Handles.color = Color.green;
                 for (int i = 0; i < daysInRange; i++)
                 {
-                    Rect barRect = new Rect(histogramRect.x + i * xStep, histogramRect.y + histogramRect.height - dailyHours[i] * yStep, xStep - 2, dailyHours[i] * yStep);
+                    var barRect = new Rect(histogramRect.x + i * xStep, histogramRect.y + histogramRect.height - dailyHours[i] * yStep, xStep - 2, dailyHours[i] * yStep);
                     Handles.DrawSolidRectangleWithOutline(barRect, Color.green, Color.black);
                 }
             }
@@ -473,8 +473,8 @@ namespace TimeMonitor.Editor
                 Handles.color = Color.blue;
                 for (int i = 0; i < daysInRange - 1; i++)
                 {
-                    Vector3 start = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
-                    Vector3 end = new Vector3(graphRect.x + (i + 1) * xStep, graphRect.y + graphRect.height - dailyHours[i + 1] * yStep);
+                    var start = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    var end = new Vector3(graphRect.x + (i + 1) * xStep, graphRect.y + graphRect.height - dailyHours[i + 1] * yStep);
                     Handles.DrawLine(start, end);
 
                     Handles.DrawSolidDisc(start, Vector3.forward, 2);
@@ -483,7 +483,7 @@ namespace TimeMonitor.Editor
                 Handles.color = Color.red;
                 for (int i = 0; i < daysInRange; i++)
                 {
-                    Vector3 point = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    var point = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
                     Handles.DrawSolidDisc(point, Vector3.forward, 2);
                 }
             }
@@ -508,19 +508,15 @@ namespace TimeMonitor.Editor
             }
         }
 
-        private string GetProcessName(string editor)
+        private static string GetProcessName(string editor)
         {
-            switch (editor)
+            return editor switch
             {
-                case "Visual Studio":
-                    return "devenv";
-                case "Rider":
-                    return "rider";
-                case "VS Code":
-                    return "code";
-                default:
-                    return string.Empty;
-            }
+                    "Visual Studio" => "devenv",
+                    "Rider" => "rider",
+                    "VS Code" => "code",
+                    _ => string.Empty
+            };
         }
 
         private sealed class SettingsWindow : EditorWindow
@@ -549,13 +545,10 @@ namespace TimeMonitor.Editor
 
                 GUILayout.Label("Select Code Editor", EditorStyles.boldLabel);
 
-                // Variable intermédiaire pour l'index sélectionné
                 int selectedCodeEditorIndex = GetCodeEditorIndex();
 
-                // Utilisation de la variable intermédiaire dans EditorGUILayout. Popup
                 selectedCodeEditorIndex = EditorGUILayout.Popup("Code Editor", selectedCodeEditorIndex, new[] { "None", "Visual Studio", "Rider", "VS Code" });
 
-                // Mise à jour de _selectedCodeEditor en fonction de l'index sélectionné
                 _selectedCodeEditor = new[] { "None", "Visual Studio", "Rider", "VS Code" }[selectedCodeEditorIndex];
 
                 if (GUI.changed)
@@ -571,18 +564,18 @@ namespace TimeMonitor.Editor
                     LoadOrCreateData();
                 }
 
-                foreach (var year in _timeMonitorData.years)
+                foreach (Year year in _timeMonitorData.years)
                 {
-                    foreach (var month in year.months)
+                    foreach (Month month in year.months)
                     {
-                        foreach (var day in month.days)
+                        foreach (Day day in month.days)
                         {
                             if (day.sessions.Count > 1)
                             {
-                                DateTime combinedStartTime = DateTime.MaxValue;
-                                DateTime combinedEndTime = DateTime.MinValue;
+                                var combinedStartTime = DateTime.MaxValue;
+                                var combinedEndTime = DateTime.MinValue;
 
-                                foreach (var session in day.sessions)
+                                foreach (Session session in day.sessions)
                                 {
                                     DateTime startTime = DateTime.Parse(session.startTime);
                                     DateTime endTime = DateTime.Parse(session.endTime);
@@ -606,7 +599,7 @@ namespace TimeMonitor.Editor
                 AssetDatabase.SaveAssets();
             }
 
-            private void ClearAllData()
+            private static void ClearAllData()
             {
                 if (_timeMonitorData != null)
                 {
@@ -616,20 +609,16 @@ namespace TimeMonitor.Editor
                 }
             }
 
-            private int GetCodeEditorIndex()
+            private static int GetCodeEditorIndex()
             {
                 string currentEditor = EditorPrefs.GetString("SelectedCodeEditor", "None");
-                switch (currentEditor)
+                return currentEditor switch
                 {
-                    case "Visual Studio":
-                        return 1;
-                    case "Rider":
-                        return 2;
-                    case "VS Code":
-                        return 3;
-                    default:
-                        return 0;
-                }
+                        "Visual Studio" => 1,
+                        "Rider" => 2,
+                        "VS Code" => 3,
+                        _ => 0
+                };
             }
         }
 
@@ -642,17 +631,17 @@ namespace TimeMonitor.Editor
 
             var dailyHoursDict = new SortedDictionary<DateTime, float>();
 
-            foreach (var year in _timeMonitorData.years)
+            foreach (Year year in _timeMonitorData.years)
             {
-                foreach (var month in year.months)
+                foreach (Month month in year.months)
                 {
-                    foreach (var day in month.days)
+                    foreach (Day day in month.days)
                     {
                         var date = new DateTime(year.yearNumber, month.monthNumber, day.dayNumber);
                         if (date >= startDate && date <= endDate)
                         {
                             float totalDayTime = 0;
-                            foreach (var session in day.sessions)
+                            foreach (Session session in day.sessions)
                             {
                                 DateTime start = DateTime.Parse(session.startTime);
                                 DateTime end = DateTime.Parse(session.endTime);
