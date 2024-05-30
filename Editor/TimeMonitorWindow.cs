@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using TimeMonitor.Data;
@@ -22,9 +23,12 @@ namespace TimeMonitor.Editor
         private bool _showCalendar;
         private bool _showLineGraph;
         private bool _showHistogram;
+        private bool _showReports;
+        private bool _showAnalysis;
 
         private string _startDateString = DateTime.Now.ToString("yyyy-MM-dd");
         private string _endDateString = DateTime.Now.ToString("yyyy-MM-dd");
+        private static string _selectedCodeEditor = "None";
 
         [MenuItem("Tools/Time Monitor")]
         public static void ShowWindow()
@@ -48,7 +52,7 @@ namespace TimeMonitor.Editor
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (GUILayout.Button("Settings", EditorStyles.toolbarButton))
             {
-                SettingsWindow.ShowWindow();
+                SettingsWindow.ShowSettingWindow();
             }
             EditorGUILayout.EndHorizontal();
 
@@ -62,18 +66,40 @@ namespace TimeMonitor.Editor
                 _showCalendar = !_showCalendar;
                 _showLineGraph = false;
                 _showHistogram = false;
+                _showReports = false;
+                _showAnalysis = false;
             }
             if (GUILayout.Button(_showLineGraph ? "Hide Line Graph" : "Show Line Graph"))
             {
                 _showLineGraph = !_showLineGraph;
                 _showCalendar = false;
                 _showHistogram = false;
+                _showReports = false;
+                _showAnalysis = false;
             }
             if (GUILayout.Button(_showHistogram ? "Hide Histogram" : "Show Histogram"))
             {
                 _showHistogram = !_showHistogram;
                 _showCalendar = false;
                 _showLineGraph = false;
+                _showReports = false;
+                _showAnalysis = false;
+            }
+            if (GUILayout.Button(_showReports ? "Hide Reports" : "Show Reports"))
+            {
+                _showReports = !_showReports;
+                _showCalendar = false;
+                _showLineGraph = false;
+                _showHistogram = false;
+                _showAnalysis = false;
+            }
+            if (GUILayout.Button(_showAnalysis ? "Hide Analysis" : "Show Analysis"))
+            {
+                _showAnalysis = !_showAnalysis;
+                _showCalendar = false;
+                _showLineGraph = false;
+                _showHistogram = false;
+                _showReports = false;
             }
             EditorGUILayout.EndHorizontal();
 
@@ -93,6 +119,14 @@ namespace TimeMonitor.Editor
             else if (_showHistogram)
             {
                 DisplayHistogram();
+            }
+            else if (_showReports)
+            {
+                DisplayReports();
+            }
+            else if (_showAnalysis)
+            {
+                DisplayAnalysis();
             }
         }
 
@@ -279,7 +313,7 @@ namespace TimeMonitor.Editor
                 return;
             }
 
-            Tuple<float[], int> data = GetSessionDataInRange(startDate, endDate);
+            var data = GetSessionDataInRange(startDate, endDate);
             if (data == null)
             {
                 EditorGUILayout.LabelField("No session data available for the selected range.");
@@ -329,7 +363,7 @@ namespace TimeMonitor.Editor
                 return;
             }
 
-            Tuple<float[], int> data = GetSessionDataInRange(startDate, endDate);
+            var data = GetSessionDataInRange(startDate, endDate);
             if (data == null)
             {
                 EditorGUILayout.LabelField("No session data available for the selected range.");
@@ -361,54 +395,136 @@ namespace TimeMonitor.Editor
             }
         }
 
-        private Tuple<float[], int> GetSessionDataInRange(DateTime startDate, DateTime endDate)
+        private void DisplayReports()
         {
             if (_timeMonitorData.years.Count == 0)
             {
-                return null;
+                EditorGUILayout.LabelField("No session data available.");
+                return;
             }
 
-            var dailyHoursDict = new SortedDictionary<DateTime, float>();
+            GUILayout.Label("Weekly Report", EditorStyles.boldLabel);
+            DisplayReportForPeriod(DateTime.Now.AddDays(-7), DateTime.Now);
 
-            foreach (Year year in _timeMonitorData.years)
+            GUILayout.Space(20);
+
+            GUILayout.Label("Monthly Report", EditorStyles.boldLabel);
+            DisplayReportForPeriod(DateTime.Now.AddMonths(-1), DateTime.Now);
+        }
+
+        private void DisplayReportForPeriod(DateTime startDate, DateTime endDate)
+        {
+            var data = GetSessionDataInRange(startDate, endDate);
+            if (data == null)
             {
-                foreach (Month month in year.months)
+                EditorGUILayout.LabelField("No data available for the selected period.");
+                return;
+            }
+
+            float[] dailyHours = data.Item1;
+            float totalHours = dailyHours.Sum();
+            float averageDailyHours = dailyHours.Average();
+            float maxDailyHours = dailyHours.Max();
+            float minDailyHours = dailyHours.Min();
+
+            GUILayout.Label($"Total Hours: {totalHours:F2}");
+            GUILayout.Label($"Average Daily Hours: {averageDailyHours:F2}");
+            GUILayout.Label($"Max Daily Hours: {maxDailyHours:F2}");
+            GUILayout.Label($"Min Daily Hours: {minDailyHours:F2}");
+        }
+
+        private void DisplayAnalysis()
+        {
+            if (_timeMonitorData.years.Count == 0)
+            {
+                EditorGUILayout.LabelField("No session data available.");
+                return;
+            }
+
+            GUILayout.Label("Trend Analysis", EditorStyles.boldLabel);
+            DisplayTrendAnalysis(DateTime.Now.AddMonths(-1), DateTime.Now);
+        }
+
+        private void DisplayTrendAnalysis(DateTime startDate, DateTime endDate)
+        {
+            var data = GetSessionDataInRange(startDate, endDate);
+            if (data == null)
+            {
+                EditorGUILayout.LabelField("No data available for the selected period.");
+                return;
+            }
+
+            float[] dailyHours = data.Item1;
+            int daysInRange = data.Item2;
+
+            GUILayout.Label("Trend of Hours Worked per Day", EditorStyles.boldLabel);
+
+            Rect graphRect = GUILayoutUtility.GetRect(600, 300);
+            if (Event.current.type == EventType.Repaint)
+            {
+                Handles.color = Color.black;
+                Handles.DrawLine(new Vector3(graphRect.x, graphRect.y), new Vector3(graphRect.x, graphRect.y + graphRect.height));
+                Handles.DrawLine(new Vector3(graphRect.x, graphRect.y + graphRect.height), new Vector3(graphRect.x + graphRect.width, graphRect.y + graphRect.height));
+
+                float maxHours = dailyHours.Max();
+                float xStep = graphRect.width / daysInRange;
+                float yStep = graphRect.height / maxHours;
+
+                Handles.color = Color.blue;
+                for (int i = 0; i < daysInRange - 1; i++)
                 {
-                    foreach (Day day in month.days)
-                    {
-                        var date = new DateTime(year.yearNumber, month.monthNumber, day.dayNumber);
-                        if (date >= startDate && date <= endDate)
-                        {
-                            float totalDayTime = 0;
-                            foreach (Session session in day.sessions)
-                            {
-                                DateTime start = DateTime.Parse(session.startTime);
-                                DateTime end = DateTime.Parse(session.endTime);
-                                totalDayTime += (float)(end - start).TotalHours;
-                            }
-                            dailyHoursDict[date] = totalDayTime;
-                        }
-                    }
+                    var start = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    var end = new Vector3(graphRect.x + (i + 1) * xStep, graphRect.y + graphRect.height - dailyHours[i + 1] * yStep);
+                    Handles.DrawLine(start, end);
+
+                    Handles.DrawSolidDisc(start, Vector3.forward, 2);
+                }
+
+                Handles.color = Color.red;
+                for (int i = 0; i < daysInRange; i++)
+                {
+                    var point = new Vector3(graphRect.x + i * xStep, graphRect.y + graphRect.height - dailyHours[i] * yStep);
+                    Handles.DrawSolidDisc(point, Vector3.forward, 2);
                 }
             }
+        }
 
-            int daysInRange = (endDate - startDate).Days + 1;
-            float[] dailyHours = new float[daysInRange];
-            for (int i = 0; i < daysInRange; i++)
+        private static bool IsCodeEditorActive(string editorProcessName)
+        {
+            Process[] processes = Process.GetProcessesByName(editorProcessName);
+            return processes.Length > 0 && processes[0].MainWindowTitle.Length > 0;
+        }
+
+        private void Update()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !EditorApplication.isPlaying)
             {
-                DateTime date = startDate.AddDays(i);
-                dailyHours[i] = dailyHoursDict.ContainsKey(date) ? dailyHoursDict[date] : 0;
+                if (_selectedCodeEditor != "None" && IsCodeEditorActive(GetProcessName(_selectedCodeEditor)))
+                {
+                    _currentSession.endTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    EditorUtility.SetDirty(_timeMonitorData);
+                    AssetDatabase.SaveAssets();
+                }
             }
+        }
 
-            return new Tuple<float[], int>(dailyHours, daysInRange);
+        private static string GetProcessName(string editor)
+        {
+            return editor switch
+            {
+                    "Visual Studio" => "devenv",
+                    "Rider" => "rider",
+                    "VS Code" => "code",
+                    _ => string.Empty
+            };
         }
 
         private sealed class SettingsWindow : EditorWindow
         {
-            public static void ShowWindow()
+            public static void ShowSettingWindow()
             {
                 var window = GetWindow<SettingsWindow>("Settings");
-                window.minSize = new Vector2(250, 150);
+                window.minSize = new Vector2(250, 200);
             }
 
             private void OnGUI()
@@ -423,6 +539,21 @@ namespace TimeMonitor.Editor
                 if (GUILayout.Button("Clear All Data"))
                 {
                     ClearAllData();
+                }
+
+                GUILayout.Space(20);
+
+                GUILayout.Label("Select Code Editor", EditorStyles.boldLabel);
+
+                int selectedCodeEditorIndex = GetCodeEditorIndex();
+
+                selectedCodeEditorIndex = EditorGUILayout.Popup("Code Editor", selectedCodeEditorIndex, new[] { "None", "Visual Studio", "Rider", "VS Code" });
+
+                _selectedCodeEditor = new[] { "None", "Visual Studio", "Rider", "VS Code" }[selectedCodeEditorIndex];
+
+                if (GUI.changed)
+                {
+                    EditorPrefs.SetString("SelectedCodeEditor", _selectedCodeEditor);
                 }
             }
 
@@ -477,6 +608,60 @@ namespace TimeMonitor.Editor
                     AssetDatabase.SaveAssets();
                 }
             }
+
+            private static int GetCodeEditorIndex()
+            {
+                string currentEditor = EditorPrefs.GetString("SelectedCodeEditor", "None");
+                return currentEditor switch
+                {
+                        "Visual Studio" => 1,
+                        "Rider" => 2,
+                        "VS Code" => 3,
+                        _ => 0
+                };
+            }
+        }
+
+        private Tuple<float[], int> GetSessionDataInRange(DateTime startDate, DateTime endDate)
+        {
+            if (_timeMonitorData.years.Count == 0)
+            {
+                return null;
+            }
+
+            var dailyHoursDict = new SortedDictionary<DateTime, float>();
+
+            foreach (Year year in _timeMonitorData.years)
+            {
+                foreach (Month month in year.months)
+                {
+                    foreach (Day day in month.days)
+                    {
+                        var date = new DateTime(year.yearNumber, month.monthNumber, day.dayNumber);
+                        if (date >= startDate && date <= endDate)
+                        {
+                            float totalDayTime = 0;
+                            foreach (Session session in day.sessions)
+                            {
+                                DateTime start = DateTime.Parse(session.startTime);
+                                DateTime end = DateTime.Parse(session.endTime);
+                                totalDayTime += (float)(end - start).TotalHours;
+                            }
+                            dailyHoursDict[date] = totalDayTime;
+                        }
+                    }
+                }
+            }
+
+            int daysInRange = (endDate - startDate).Days + 1;
+            float[] dailyHours = new float[daysInRange];
+            for (int i = 0; i < daysInRange; i++)
+            {
+                DateTime date = startDate.AddDays(i);
+                dailyHours[i] = dailyHoursDict.ContainsKey(date) ? dailyHoursDict[date] : 0;
+            }
+
+            return new Tuple<float[], int>(dailyHours, daysInRange);
         }
     }
 }
