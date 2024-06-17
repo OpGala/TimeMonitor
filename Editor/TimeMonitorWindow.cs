@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using TimeMonitor.Data;
@@ -56,12 +57,33 @@ namespace TimeMonitor.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.LabelField("Current Session Time:", GetCurrentSessionTime());
-            EditorGUILayout.LabelField("Total Project Time:", GetTotalProjectTime());
+            EditorGUILayout.Space();
+
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 18,
+                normal = { textColor = Color.cyan }
+            };
+            EditorGUILayout.LabelField("Time Monitor", headerStyle);
+
+            EditorGUILayout.Space();
+
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14
+            };
+
+            EditorGUILayout.LabelField("Current Session Time:", GetCurrentSessionTime(), labelStyle);
+            EditorGUILayout.LabelField("Total Project Time:", GetTotalProjectTime(), labelStyle);
+
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button(_showCalendar ? "Hide Calendar" : "Show Calendar"))
+            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 14
+            };
+            if (GUILayout.Button(_showCalendar ? "Hide Calendar" : "Show Calendar", buttonStyle))
             {
                 _showCalendar = !_showCalendar;
                 _showLineGraph = false;
@@ -69,7 +91,7 @@ namespace TimeMonitor.Editor
                 _showReports = false;
                 _showAnalysis = false;
             }
-            if (GUILayout.Button(_showLineGraph ? "Hide Line Graph" : "Show Line Graph"))
+            if (GUILayout.Button(_showLineGraph ? "Hide Line Graph" : "Show Line Graph", buttonStyle))
             {
                 _showLineGraph = !_showLineGraph;
                 _showCalendar = false;
@@ -77,7 +99,7 @@ namespace TimeMonitor.Editor
                 _showReports = false;
                 _showAnalysis = false;
             }
-            if (GUILayout.Button(_showHistogram ? "Hide Histogram" : "Show Histogram"))
+            if (GUILayout.Button(_showHistogram ? "Hide Histogram" : "Show Histogram", buttonStyle))
             {
                 _showHistogram = !_showHistogram;
                 _showCalendar = false;
@@ -85,7 +107,7 @@ namespace TimeMonitor.Editor
                 _showReports = false;
                 _showAnalysis = false;
             }
-            if (GUILayout.Button(_showReports ? "Hide Reports" : "Show Reports"))
+            if (GUILayout.Button(_showReports ? "Hide Reports" : "Show Reports", buttonStyle))
             {
                 _showReports = !_showReports;
                 _showCalendar = false;
@@ -93,7 +115,7 @@ namespace TimeMonitor.Editor
                 _showHistogram = false;
                 _showAnalysis = false;
             }
-            if (GUILayout.Button(_showAnalysis ? "Hide Analysis" : "Show Analysis"))
+            if (GUILayout.Button(_showAnalysis ? "Hide Analysis" : "Show Analysis", buttonStyle))
             {
                 _showAnalysis = !_showAnalysis;
                 _showCalendar = false;
@@ -103,14 +125,18 @@ namespace TimeMonitor.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Date Range:", EditorStyles.boldLabel);
             _startDateString = EditorGUILayout.TextField("Start Date (yyyy-MM-dd)", _startDateString);
             _endDateString = EditorGUILayout.TextField("End Date (yyyy-MM-dd)", _endDateString);
 
+            EditorGUILayout.Space();
+
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(400));
             if (_showCalendar)
             {
-                _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(400));
                 DisplaySessionHistory();
-                EditorGUILayout.EndScrollView();
             }
             else if (_showLineGraph)
             {
@@ -128,6 +154,7 @@ namespace TimeMonitor.Editor
             {
                 DisplayAnalysis();
             }
+            EditorGUILayout.EndScrollView();
         }
 
         private static void LoadOrCreateData()
@@ -218,8 +245,8 @@ namespace TimeMonitor.Editor
                     {
                         foreach (Session session in day.sessions)
                         {
-                            DateTime start = DateTime.Parse(session.startTime);
-                            DateTime end = DateTime.Parse(session.endTime);
+                            DateTime start = DateTime.Parse(session.startTime, new CultureInfo("en-US"));
+                            DateTime end = DateTime.Parse(session.endTime, new CultureInfo("en-US"));
                             total += end - start;
                         }
                     }
@@ -290,8 +317,8 @@ namespace TimeMonitor.Editor
                         {
                             foreach (Session session in day.sessions)
                             {
-                                DateTime start = DateTime.Parse(session.startTime);
-                                DateTime end = DateTime.Parse(session.endTime);
+                                DateTime start = DateTime.Parse(session.startTime, new CultureInfo("en-US"));
+                                DateTime end = DateTime.Parse(session.endTime, new CultureInfo("en-US"));
                                 totalDayTime += (float)(end - start).TotalHours;
                             }
                         }
@@ -512,10 +539,10 @@ namespace TimeMonitor.Editor
         {
             return editor switch
             {
-                    "Visual Studio" => "devenv",
-                    "Rider" => "rider",
-                    "VS Code" => "code",
-                    _ => string.Empty
+                "Visual Studio" => "devenv",
+                "Rider" => "rider",
+                "VS Code" => "code",
+                _ => string.Empty
             };
         }
 
@@ -577,8 +604,8 @@ namespace TimeMonitor.Editor
 
                                 foreach (Session session in day.sessions)
                                 {
-                                    DateTime startTime = DateTime.Parse(session.startTime);
-                                    DateTime endTime = DateTime.Parse(session.endTime);
+                                    DateTime startTime = DateTime.Parse(session.startTime, new CultureInfo("en-US"));
+                                    DateTime endTime = DateTime.Parse(session.endTime, new CultureInfo("en-US"));
 
                                     if (startTime < combinedStartTime) combinedStartTime = startTime;
                                     if (endTime > combinedEndTime) combinedEndTime = endTime;
@@ -614,10 +641,10 @@ namespace TimeMonitor.Editor
                 string currentEditor = EditorPrefs.GetString("SelectedCodeEditor", "None");
                 return currentEditor switch
                 {
-                        "Visual Studio" => 1,
-                        "Rider" => 2,
-                        "VS Code" => 3,
-                        _ => 0
+                    "Visual Studio" => 1,
+                    "Rider" => 2,
+                    "VS Code" => 3,
+                    _ => 0
                 };
             }
         }
@@ -643,8 +670,8 @@ namespace TimeMonitor.Editor
                             float totalDayTime = 0;
                             foreach (Session session in day.sessions)
                             {
-                                DateTime start = DateTime.Parse(session.startTime);
-                                DateTime end = DateTime.Parse(session.endTime);
+                                DateTime start = DateTime.Parse(session.startTime, new CultureInfo("en-US"));
+                                DateTime end = DateTime.Parse(session.endTime, new CultureInfo("en-US"));
                                 totalDayTime += (float)(end - start).TotalHours;
                             }
                             dailyHoursDict[date] = totalDayTime;
